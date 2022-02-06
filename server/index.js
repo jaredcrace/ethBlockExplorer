@@ -6,9 +6,10 @@ const cors = require('cors');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 const axios = require('axios');
-const ALCHEMY_URL = "https://eth-rinkeby.alchemyapi.io/v2/XqiOO-5smyrTtJt5mzi4eJwMsBT0_Kzu";
-
+const ALCHEMY_URL_RINKEBY = "https://eth-rinkeby.alchemyapi.io/v2/XqiOO-5smyrTtJt5mzi4eJwMsBT0_Kzu";
+const ALCHEMY_URL = "https://eth-mainnet.alchemyapi.io/v2/1pk3z4xn7RgT4dW2oR6x_BuRGgPxlVxI";
 const port = 3042;
+
 
 // localhost can have cross origin errors
 // depending on the browser you use!
@@ -148,18 +149,19 @@ app.get('/balance/:address', (req, res) => {
   res.send(b);
 });
 
-async function blockExplorer(){
-  console.log('blockExplorer called');
+async function getLatestBlock(){
   await axios.post(ALCHEMY_URL, {
     jsonrpc: "2.0",
     id: 1,
-    method: "eth_getBlockByNumber",
+//    method: "eth_getBlockByNumber",
+    method: "eth_blockNumber",
     params: [
       "0xb443", // block 46147
       false  // retrieve the full transaction object in transactions array
     ]
   }).then((response) => {
     console.log(response.data.result);
+    return response.data.result;
   });
 }
 
@@ -167,7 +169,9 @@ app.post('/send', (req, res) => {
   const {sender, recipient, sigR, sigS, amount} = req.body;
 
   // new code
-  blockExplorer();
+  let latestBlock = getLatestBlock();
+  console.log(`latest block: ${latestBlock}`);
+
 
   if(!EXCHANGE.isValidWalletAddress(sender) || !EXCHANGE.isValidWalletAddress(recipient)){
     return;
