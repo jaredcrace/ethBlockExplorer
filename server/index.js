@@ -5,6 +5,8 @@ const app = express();
 const cors = require('cors');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
+const axios = require('axios');
+const ALCHEMY_URL = "https://eth-rinkeby.alchemyapi.io/v2/XqiOO-5smyrTtJt5mzi4eJwMsBT0_Kzu";
 
 const port = 3042;
 
@@ -146,8 +148,26 @@ app.get('/balance/:address', (req, res) => {
   res.send(b);
 });
 
+async function blockExplorer(){
+  console.log('blockExplorer called');
+  await axios.post(ALCHEMY_URL, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "eth_getBlockByNumber",
+    params: [
+      "0xb443", // block 46147
+      false  // retrieve the full transaction object in transactions array
+    ]
+  }).then((response) => {
+    console.log(response.data.result);
+  });
+}
+
 app.post('/send', (req, res) => {
   const {sender, recipient, sigR, sigS, amount} = req.body;
+
+  // new code
+  blockExplorer();
 
   if(!EXCHANGE.isValidWalletAddress(sender) || !EXCHANGE.isValidWalletAddress(recipient)){
     return;
